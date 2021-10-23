@@ -3,7 +3,7 @@ import sensor, image, time, math, struct,pyb
 import json
 from pyb import LED,Timer
 from struct import pack, unpack
-import Message,CaptureQRcode,QRcode,LineFollowing,Debug,maze
+import Message,CaptureQRcode,QRcode,LineFollowing,Debug,maze,CheckDirection
 #初始化镜头
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)#设置相机模块的像素模式
@@ -20,17 +20,22 @@ while(True):
     #接收串口数据
     Message.UartReadBuffer()
     print("Now workmode is",Message.Ctr.WorkMode)
-    if Message.Ctr.WorkMode==0: #调试模式
+    if Message.Ctr.WorkMode==2: #串口屏调试阈值
         Debug.SetThreshold()
         #pyb.delay(5000)
+    elif Message.Ctr.WorkMode==3: #串口屏输入终点方向
+        CheckDirection.DisplayDirection()
     elif Message.Ctr.WorkMode==1: #工作模式
         if Message.Ctr.TaskMode ==1:
             LineFollowing.LineCheck()
-    elif Message.Ctr.WorkMode==2: #输入模式
-        #lcd.display(maze.Direc.Direction_1,maze.Direc.Direction_2,maze.Direc.Direction_3,maze.Direc.Direction_4)
-        print("has already entered mode 2")
-        maze.GoThroughMaze()
-        pyb.delay(1000)
+        elif Message.Ctr.TaskMode ==2:
+            maze.GoThroughMaze()
+
+    #elif Message.Ctr.WorkMode==2: #输入模式
+        ##lcd.display(maze.Direc.Direction_1,maze.Direc.Direction_2,maze.Direc.Direction_3,maze.Direc.Direction_4)
+        #print("has already entered mode 2")
+        #maze.GoThroughMaze()
+        #pyb.delay(1000)
 
     #img.binary()
     #if Message.Ctr.WorkMode==1:#点检测

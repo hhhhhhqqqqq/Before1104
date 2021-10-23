@@ -98,49 +98,49 @@ def ReceiveAnl(data_buf,num):
     #     Ctr.WorkMode = 1 #工作模式
 
     if data_buf[2]==0xB2:      #串口屏给openmv调阈值
-        if data_buf[4]==0x00:
-            Ctr.WorkMode = 0 #调试模式
+        if data_buf[4]==0x02: #进入调试模式
+            Ctr.WorkMode = 2 #调试模式
             print("in debug mode Ctr.WorkMode=",Ctr.WorkMode)
-        elif data_buf[4]==0x01: #黑色阈值调整
-            m=0
-            while(m<6):
-                list_black.listin[m]=data_buf[m+5]-0x80
-                m = m+1
-                print("list_black.listin=",list_black.listin)
-                Ctr.SetForColour=1
-        elif data_buf[4]==0x02: #白色阈值调整
-            l=0
-            while(l<6):
-                list_white.listin[l]=data_buf[l+5]-0x80
-                l = l+1
-                print("list_white.listin=",list_white.listin)
-                Ctr.SetForColour=2
-        elif data_buf[4]==0x0A:
+            if data_buf[5]==0x01: #黑色阈值调整
+                m=0
+                while(m<6):
+                    list_black.listin[m]=data_buf[m+6]-0x80
+                    m = m+1
+                    print("list_black.listin=",list_black.listin)
+                    Ctr.SetForColour=1
+            elif data_buf[5]==0x02: #白色阈值调整
+                l=0
+                while(l<6):
+                    list_white.listin[l]=data_buf[l+6]-0x80
+                    l = l+1
+                    print("list_white.listin=",list_white.listin)
+                    Ctr.SetForColour=2
+        elif data_buf[4]==0x01: #回到工作模式
             Ctr.WorkMode = 1 #工作模式
 
     elif data_buf[2]==0xB4:    #主控控制openmv的taskmode
-        if data_buf[4]==0x11:
-            Ctr.Taskmode = 1
-        elif data_buf[4]==0x12:
-            Ctr.Taskmode = 2
-        elif data_buf[4]==0x13:
+        if data_buf[5]==0x01:
+            Ctr.Taskmode = 1    #LineFollowing.LineCheck()
+        elif data_buf[5]==0x02:
+            Ctr.Taskmode = 2    #maze.GoThroughMaze()
+        elif data_buf[5]==0x03:
             Ctr.TaskMode = 3
 
     elif data_buf[2]==0xB5:   #串口屏给openmv输入出口方向
-        if data_buf[4]==0x02:
-            Ctr.Workmode=2
-            maze.Direc.Direction_1=data_buf[5]
-            maze.Direc.Direction_2=data_buf[6]
-            maze.Direc.Direction_3=data_buf[7]
-            maze.Direc.Direction_4=data_buf[8]
-        elif data_buf[4]==0x01:
-            Ctr.Workmode=1
-
+        if data_buf[4]==0x03:
+            Ctr.WorkMode = 3 #传值模式
+            print("try to insert direction,Ctr.WorkMode=",Ctr.WorkMode)
+            maze.Direc.Direction_1=data_buf[6]
+            maze.Direc.Direction_2=data_buf[7]
+            maze.Direc.Direction_3=data_buf[8]
+            maze.Direc.Direction_4=data_buf[9]
+        if data_buf[4]==0x01:
+            Ctr.WorkMode = 1 #回到工作模式
 
     elif data_buf[2]==0xB6:   #主控的上一步动作是否完成
-        if data_buf[4]==0x01:
+        if data_buf[6]==0x01:
             maze.Plan.Move=1
-        elif data_buf[4]==0x00:
+        elif data_buf[6]==0x00:
             maze.Plan.Move=0
 
 
