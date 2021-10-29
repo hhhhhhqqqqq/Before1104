@@ -328,37 +328,73 @@ def LineDataPack(flag,angle,distance,crossflag,crossx,crossy,T_ms):
     #print(line_data)
     return line_data
 
-def MazeDataPack(flag, orientation):
-    if(flag==0):
-        print("has already reached destination")
-    if(flag==1):
-        print("continuing move")
 
-
-    maze_data=bytearray([0xAA,0xFF,0xB7,0x00,flag,orientation,0x00,0x00])
-    lens = len(maze_data)#数据包大小
-    maze_data[2] = 11;#有效数据个数
+def RouteDataPack(routelist):
+    datalength = len(routelist)
+    print("datalength=",datalength)
+    prefix = bytearray([0xAA,0XFF,0xB7,datalength])
+    #prefix[3]=datalength
+    print("prefix=",prefix)
+    datasegment = bytearray(routelist)
+    postfix = bytearray([0x00,0x00])
+    route_data = prefix+datasegment+postfix
+    print("first_route_data=",route_data)
+    whole_length = len(route_data)#整个数据包大小
     i = 0
     sumcheck = 0
     addcheck = 0
-
-    #和校验
-    #while i<(lens-1):
-    #    sum = sum + line_data[i]
-    #    i = i+1
-    #line_data[lens-1] = sum;
-
     #校验方式2
-    while i<(lens-2):
-        sumcheck = sumcheck+ line_data[i]
+    while i<(whole_length-2):
+        sumcheck = sumcheck+ route_data[i]
         addcheck = addcheck+sumcheck
         i = i+1
-    maze_data[lens-2] = sumcheck
-    maze_data[lens-1] = addcheck
+    print("sumcheck=",sumcheck)
+    print("addcheck=",addcheck)
+    #print("whole length=",whole_length)
+    #print("route_data[whole_length-3]=",route_data[whole_length-3])
+    route_data[whole_length-2] = sumcheck
+    route_data[whole_length-1] = addcheck
+    print("route_data[whole_length-3]=",route_data[whole_length-3])
+    print("route_data[whole_length-2]=",route_data[whole_length-2])
+    print("route_data[wholoe-length-1]=",route_data[whole_length-1])
+    print(route_data)
+    return route_data
 
 
-    #print(line_data)
-    return maze_data
+
+
+
+#def MazeDataPack(flag, orientation):
+    #if(flag==0):
+        #print("has already reached destination")
+    #if(flag==1):
+        #print("continuing move")
+
+
+    #maze_data=bytearray([0xAA,0xFF,0xB7,0x00,flag,orientation,0x00,0x00])
+    #lens = len(maze_data)#数据包大小
+    #maze_data[2] = 11;#有效数据个数
+    #i = 0
+    #sumcheck = 0
+    #addcheck = 0
+
+    ##和校验
+    ##while i<(lens-1):
+    ##    sum = sum + line_data[i]
+    ##    i = i+1
+    ##line_data[lens-1] = sum;
+
+    ##校验方式2
+    #while i<(lens-2):
+        #sumcheck = sumcheck+ line_data[i]
+        #addcheck = addcheck+sumcheck
+        #i = i+1
+    #maze_data[lens-2] = sumcheck
+    #maze_data[lens-1] = addcheck
+
+
+    ##print(line_data)
+    #return maze_data
 
 
 ##用户数据打包

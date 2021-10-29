@@ -29,7 +29,7 @@ class CoordinInfor(object):
     StartPoint_y=1
     EndPoint_x=6
     EndPoint_y=6
-    PassableList=[[1,1],[1,2],[2,2],[4,2],[2,3],[3,3],[4,3],[5,3],[3,4],[5,4],[2,5],[3,5],[5,5],[6,5],[6,6]]
+    PassableList=[[1,1],[1,2],[2,2],[4,2],[2,3],[3,3],[4,3],[5,3],[3,4],[5,4],[2,5],[3,5],[5,5],[6,5],[6,6],[5,6]]
 
 
 coordininfor=CoordinInfor([],Dimension.x_length,Dimension.y_length)
@@ -68,7 +68,10 @@ class Node(object):              #定义所有格子
         #self.visit=0
         self.colour=0
 
+class DirectionToSend(object):
+    Direction_list=[]
 
+direction= DirectionToSend()
 
 node=[[0]*Dimension.y_length for i in range (Dimension.x_length)]  #m*n two dimension-array -1
 
@@ -112,6 +115,29 @@ def checkcolour(node):
         return 0
     else:
         return 1
+
+def CalculateDirection(pathlist):
+    pathlength=len(pathlist)
+    #Direction_list=[1]*(pathlength-1)
+    q=0
+    while q<pathlength-1:
+        x_difference=pathlist[q+1][0]-pathlist[q][0]
+        y_difference=pathlist[q+1][1]-pathlist[q][1]
+        if y_difference == 1:
+            direction.Direction_list.append(0)   #0上
+        elif x_difference == 1:
+            direction.Direction_list.append(1)   #1右
+        elif y_difference == -1:
+            direction.Direction_list.append(2)   #2下
+        elif x_difference == -1:
+            direction.Direction_list.append(3)   #3左
+        else:
+            direction.Direction_list.append(4)   #4出错
+        q=q+1
+    print("direction_set=",direction.Direction_list)
+
+
+
 
 
 
@@ -190,7 +216,8 @@ def bfs():
                 #pathset=path_back.reversed()
 
                 path_length=len(pathset)
-                print(pathset)
+                print("pathset=",pathset)
+                return(pathset)
                 break
 
 
@@ -370,7 +397,9 @@ def bfs():
 
 #def Plan(object):
 ChangeToPass(coordininfor.PassableList)
-bfs()
+pathfinal=bfs()
+CalculateDirection(pathfinal)
+Message.UartSendData(Message.RouteDataPack(direction.Direction_list))
 
 
 
