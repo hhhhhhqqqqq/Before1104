@@ -42,7 +42,7 @@ class Ctrl(object):
     IsDebug = 1     #不为调试状态时关闭某些图形显示等，有利于提高运行速度
     T_ms = 0
     SetForColour=0
-    TaskMode = 1
+    TaskMode = 2
     Detection = 0
 #类的实例化
 
@@ -98,49 +98,49 @@ def ReceiveAnl(data_buf,num):
     #     Ctr.WorkMode = 1 #工作模式
 
     if data_buf[2]==0xB2:      #串口屏给openmv调阈值
-        if data_buf[4]==0x02: #进入调试模式
-            Ctr.WorkMode = 2 #调试模式
+        if data_buf[4]==0x00:
+            Ctr.WorkMode = 0 #调试模式
             print("in debug mode Ctr.WorkMode=",Ctr.WorkMode)
-            if data_buf[5]==0x01: #黑色阈值调整
-                m=0
-                while(m<6):
-                    list_black.listin[m]=data_buf[m+6]-0x80
-                    m = m+1
-                    print("list_black.listin=",list_black.listin)
-                    Ctr.SetForColour=1
-            elif data_buf[5]==0x02: #白色阈值调整
-                l=0
-                while(l<6):
-                    list_white.listin[l]=data_buf[l+6]-0x80
-                    l = l+1
-                    print("list_white.listin=",list_white.listin)
-                    Ctr.SetForColour=2
-        elif data_buf[4]==0x01: #回到工作模式
+        elif data_buf[4]==0x01: #黑色阈值调整
+            m=0
+            while(m<6):
+                list_black.listin[m]=data_buf[m+5]-0x80
+                m = m+1
+                print("list_black.listin=",list_black.listin)
+                Ctr.SetForColour=1
+        elif data_buf[4]==0x02: #白色阈值调整
+            l=0
+            while(l<6):
+                list_white.listin[l]=data_buf[l+5]-0x80
+                l = l+1
+                print("list_white.listin=",list_white.listin)
+                Ctr.SetForColour=2
+        elif data_buf[4]==0x0A:
             Ctr.WorkMode = 1 #工作模式
 
     elif data_buf[2]==0xB4:    #主控控制openmv的taskmode
-        if data_buf[5]==0x01:
-            Ctr.Taskmode = 1    #LineFollowing.LineCheck()
-        elif data_buf[5]==0x02:
-            Ctr.Taskmode = 2    #maze.GoThroughMaze()
-        elif data_buf[5]==0x03:
+        if data_buf[4]==0x11:
+            Ctr.Taskmode = 1
+        elif data_buf[4]==0x12:
+            Ctr.Taskmode = 2
+        elif data_buf[4]==0x13:
             Ctr.TaskMode = 3
 
     elif data_buf[2]==0xB5:   #串口屏给openmv输入出口方向
-        if data_buf[4]==0x03:
-            Ctr.WorkMode = 3 #传值模式
-            print("try to insert direction,Ctr.WorkMode=",Ctr.WorkMode)
-            maze.Direc.Direction_1=data_buf[6]
-            maze.Direc.Direction_2=data_buf[7]
-            maze.Direc.Direction_3=data_buf[8]
-            maze.Direc.Direction_4=data_buf[9]
-        if data_buf[4]==0x01:
-            Ctr.WorkMode = 1 #回到工作模式
+        if data_buf[4]==0x02:
+            Ctr.Workmode=2
+            maze.Direc.Direction_1=data_buf[5]
+            maze.Direc.Direction_2=data_buf[6]
+            maze.Direc.Direction_3=data_buf[7]
+            maze.Direc.Direction_4=data_buf[8]
+        elif data_buf[4]==0x01:
+            Ctr.Workmode=1
+
 
     elif data_buf[2]==0xB6:   #主控的上一步动作是否完成
-        if data_buf[6]==0x01:
+        if data_buf[4]==0x01:
             maze.Plan.Move=1
-        elif data_buf[6]==0x00:
+        elif data_buf[4]==0x00:
             maze.Plan.Move=0
 
 
@@ -328,73 +328,37 @@ def LineDataPack(flag,angle,distance,crossflag,crossx,crossy,T_ms):
     #print(line_data)
     return line_data
 
+def MazeDataPack(flag, orientation):
+    if(flag==0):
+        print("has already reached destination")
+    if(flag==1):
+        print("continuing move")
 
-def RouteDataPack(routelist):
-    datalength = len(routelist)
-    print("datalength=",datalength)
-    prefix = bytearray([0xAA,0XFF,0xB7,datalength])
-    #prefix[3]=datalength
-    print("prefix=",prefix)
-    datasegment = bytearray(routelist)
-    postfix = bytearray([0x00,0x00])
-    route_data = prefix+datasegment+postfix
-    print("first_route_data=",route_data)
-    whole_length = len(route_data)#整个数据包大小
+
+    maze_data=bytearray([0xAA,0xFF,0xB7,0x00,flag,orientation,0x00,0x00])
+    lens = len(maze_data)#数据包大小
+    maze_data[2] = 11;#有效数据个数
     i = 0
     sumcheck = 0
     addcheck = 0
+
+    #和校验
+    #while i<(lens-1):
+    #    sum = sum + line_data[i]
+    #    i = i+1
+    #line_data[lens-1] = sum;
+
     #校验方式2
-    while i<(whole_length-2):
-        sumcheck = sumcheck+ route_data[i]
+    while i<(lens-2):
+        sumcheck = sumcheck+ line_data[i]
         addcheck = addcheck+sumcheck
         i = i+1
-    print("sumcheck=",sumcheck)
-    print("addcheck=",addcheck)
-    #print("whole length=",whole_length)
-    #print("route_data[whole_length-3]=",route_data[whole_length-3])
-    route_data[whole_length-2] = sumcheck
-    route_data[whole_length-1] = addcheck
-    print("route_data[whole_length-3]=",route_data[whole_length-3])
-    print("route_data[whole_length-2]=",route_data[whole_length-2])
-    print("route_data[wholoe-length-1]=",route_data[whole_length-1])
-    print(route_data)
-    return route_data
+    maze_data[lens-2] = sumcheck
+    maze_data[lens-1] = addcheck
 
 
-
-
-
-#def MazeDataPack(flag, orientation):
-    #if(flag==0):
-        #print("has already reached destination")
-    #if(flag==1):
-        #print("continuing move")
-
-
-    #maze_data=bytearray([0xAA,0xFF,0xB7,0x00,flag,orientation,0x00,0x00])
-    #lens = len(maze_data)#数据包大小
-    #maze_data[2] = 11;#有效数据个数
-    #i = 0
-    #sumcheck = 0
-    #addcheck = 0
-
-    ##和校验
-    ##while i<(lens-1):
-    ##    sum = sum + line_data[i]
-    ##    i = i+1
-    ##line_data[lens-1] = sum;
-
-    ##校验方式2
-    #while i<(lens-2):
-        #sumcheck = sumcheck+ line_data[i]
-        #addcheck = addcheck+sumcheck
-        #i = i+1
-    #maze_data[lens-2] = sumcheck
-    #maze_data[lens-1] = addcheck
-
-
-    ##print(line_data)
-    #return maze_data
+    #print(line_data)
+    return maze_data
 
 
 ##用户数据打包

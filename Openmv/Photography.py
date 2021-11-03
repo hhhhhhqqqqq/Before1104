@@ -9,7 +9,7 @@ class Video(object):
     QRNumber = 0
 #类的实例化
 Video=Video()
-def Photography(Photoname,SkipTime):
+def photography(Photoname,SkipTime):
     img = sensor.snapshot()
     print("You're on camera!")
     pyb.LED(RED_LED_PIN).on()
